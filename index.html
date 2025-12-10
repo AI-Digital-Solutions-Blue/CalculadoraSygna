@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora Sygna - Planes y Funcionalidades 2025</title>
@@ -14,13 +12,14 @@
             <p class="note">Precios sin IVA</p>
         </header>
 
-        <div class="calculator-grid">
+        <div class="main-layout">
+            <div class="calculator-grid">
             <!-- Selección de Período -->
             <section class="card period-selector">
                 <h2>Período de Facturación</h2>
                 <div class="period-options">
                     <label class="period-option">
-                        <input type="radio" name="period" value="monthly" checked>
+                        <input type="radio" name="period" value="monthly" checked="">
                         <div class="period-content">
                             <strong>Mensual</strong>
                             <small>Facturación cada mes</small>
@@ -112,21 +111,6 @@
                     </label>
                 </div>
 
-                <!-- Nóminas -->
-                <div class="module">
-                    <label class="module-toggle">
-                        <input type="checkbox" id="nominas" data-module="nominas">
-                        <span><strong>Nóminas</strong> (requiere RRHH)</span>
-                    </label>
-                    <div class="module-options" id="nominas-options" style="display: none;">
-                        <div class="extra-input">
-                            <label>Número de nóminas al mes:</label>
-                            <input type="number" id="num-nominas" min="0" value="0" placeholder="0">
-                            <span class="unit">× 5 €/nómina</span>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Tesorería -->
                 <div class="module">
                     <label class="module-toggle">
@@ -148,14 +132,6 @@
                     <label class="module-toggle">
                         <input type="checkbox" id="documentos" data-module="documentos" data-price="4">
                         <span><strong>Documentos y Firma Digital</strong> - 4 €/mes</span>
-                    </label>
-                </div>
-
-                <!-- Dashboards e Integraciones -->
-                <div class="module">
-                    <label class="module-toggle">
-                        <input type="checkbox" id="dashboards" data-module="dashboards" data-price="6">
-                        <span><strong>Dashboards e Integraciones</strong> - 6 €/mes</span>
                     </label>
                 </div>
 
@@ -184,7 +160,7 @@
                             <label class="bundle-option">
                                 <input type="radio" name="bundle" value="cumple-factura">
                                 <div class="bundle-content">
-                                    <strong>Cumple & Factura</strong>
+                                    <strong>Cumple &amp; Factura</strong>
                                     <small>Micro + Facturación S</small>
                                     <span class="bundle-price">15 €/mes</span>
                                 </div>
@@ -192,10 +168,10 @@
                             <label class="bundle-option recommended">
                                 <input type="radio" name="bundle" value="personas-facturae-nominas">
                                 <div class="bundle-content">
-                                    <strong>Personas + Facturae + Nóminas</strong>
+                                    <strong>Personas + Facturae</strong>
                                     <span class="recommended-badge">RECOMENDADO</span>
-                                    <small>Micro + RRHH + Facturación S + Nóminas</small>
-                                    <span class="bundle-price">24 € + nóminas</span>
+                                    <small>Micro + RRHH + Facturación S</small>
+                                    <span class="bundle-price">24 €/mes</span>
                                 </div>
                             </label>
                             <label class="bundle-option">
@@ -231,16 +207,16 @@
                             <label class="bundle-option recommended">
                                 <input type="radio" name="bundle" value="personas-facturae-nominas-pyme">
                                 <div class="bundle-content">
-                                    <strong>Personas + Facturae + Nóminas</strong>
+                                    <strong>Personas + Facturae</strong>
                                     <span class="recommended-badge">RECOMENDADO</span>
-                                    <small>Pyme + RRHH + Facturación L + Nóminas</small>
-                                    <span class="bundle-price">37 € + nóminas</span>
+                                    <small>Pyme + RRHH + Facturación L</small>
+                                    <span class="bundle-price">37 €/mes</span>
                                 </div>
                             </label>
                             <label class="bundle-option">
                                 <input type="radio" name="bundle" value="ventas-cobros">
                                 <div class="bundle-content">
-                                    <strong>Ventas & Cobros (Tesorería)</strong>
+                                    <strong>Ventas &amp; Cobros (Tesorería)</strong>
                                     <small>Pyme + Facturación L + Tesorería</small>
                                     <span class="bundle-price">37 €/mes</span>
                                 </div>
@@ -258,7 +234,7 @@
                                 <div class="bundle-content">
                                     <strong>Operativa Completa</strong>
                                     <small>Pyme + Todos los módulos</small>
-                                    <span class="bundle-price">71 € + nóminas</span>
+                                    <span class="bundle-price">56 €/mes</span>
                                 </div>
                             </label>
                         </div>
@@ -272,8 +248,8 @@
                                 <div class="bundle-content">
                                     <strong>ERP + Facturae + Personas</strong>
                                     <span class="recommended-badge">RECOMENDADO</span>
-                                    <small>Empresa + Facturación XL + Tesorería + Contabilidad + RRHH + Nóminas</small>
-                                    <span class="bundle-price">71 € + nóminas</span>
+                                    <small>Empresa + Facturación XL + Tesorería + Contabilidad + RRHH</small>
+                                    <span class="bundle-price">71 €/mes</span>
                                 </div>
                             </label>
                             <label class="bundle-option">
@@ -287,9 +263,9 @@
                             <label class="bundle-option">
                                 <input type="radio" name="bundle" value="erp-pro">
                                 <div class="bundle-content">
-                                    <strong>ERP Pro (Integraciones & API)</strong>
+                                    <strong>ERP Pro</strong>
                                     <small>Empresa + Facturación Enterprise + Todos los módulos</small>
-                                    <span class="bundle-price">95 € + nóminas</span>
+                                    <span class="bundle-price">83 €/mes</span>
                                 </div>
                             </label>
                         </div>
@@ -312,28 +288,33 @@
                 </div>
             </section>
 
-            <!-- Resumen y Total -->
-            <section class="card summary-card">
-                <h2>Resumen del Presupuesto</h2>
-                <div id="summary-content">
-                    <p class="empty-message">Selecciona una base para comenzar</p>
-                </div>
-                <div class="total-section">
-                    <div class="total-line">
-                        <span>Total mensual:</span>
-                        <strong id="total-mensual">0,00 €</strong>
+            </div>
+
+            <!-- Resumen y Total - Sidebar -->
+            <aside class="summary-sidebar">
+                <section class="card summary-card">
+                    <h2>Resumen del Presupuesto</h2>
+                    <div id="summary-content">
+                        <p class="empty-message">Selecciona una base para comenzar</p>
                     </div>
-                    <div class="total-line">
-                        <span>Total anual:</span>
-                        <strong id="total-anual">0,00 €</strong>
+                    <div class="total-section">
+                        <div class="total-line">
+                            <span>Total mensual:</span>
+                            <strong id="total-mensual">0,00 €</strong>
+                        </div>
+                        <div class="total-line">
+                            <span>Total anual:</span>
+                            <strong id="total-anual">0,00 €</strong>
+                        </div>
                     </div>
-                </div>
-                <button id="generar-presupuesto" class="btn-primary" disabled>Generar Presupuesto PDF</button>
-            </section>
+                    <button id="generar-presupuesto" class="btn-primary" disabled="">Generar Presupuesto PDF</button>
+                </section>
+            </aside>
         </div>
     </div>
 
     <script src="script.js"></script>
-</body>
-</html>
 
+
+
+</body></html>
