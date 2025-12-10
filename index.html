@@ -15,6 +15,28 @@
         </header>
 
         <div class="calculator-grid">
+            <!-- Selección de Período -->
+            <section class="card period-selector">
+                <h2>Período de Facturación</h2>
+                <div class="period-options">
+                    <label class="period-option">
+                        <input type="radio" name="period" value="monthly" checked>
+                        <div class="period-content">
+                            <strong>Mensual</strong>
+                            <small>Facturación cada mes</small>
+                        </div>
+                    </label>
+                    <label class="period-option">
+                        <input type="radio" name="period" value="annual">
+                        <div class="period-content">
+                            <strong>Anual</strong>
+                            <small>Ahorra 2 meses (paga 10 meses)</small>
+                            <span class="discount-badge">-17%</span>
+                        </div>
+                    </label>
+                </div>
+            </section>
+
             <!-- Selección de Base -->
             <section class="card">
                 <h2>1. Selecciona tu Base</h2>
@@ -48,7 +70,11 @@
 
             <!-- Módulos Funcionales -->
             <section class="card">
-                <h2>2. Módulos Funcionales</h2>
+                <div class="accordion-header" id="modules-header">
+                    <h2>2. Módulos Funcionales</h2>
+                    <span class="accordion-icon" id="modules-icon">▼</span>
+                </div>
+                <div class="accordion-content" id="modules-content">
                 
                 <!-- Facturación Digital -->
                 <div class="module">
@@ -140,11 +166,145 @@
                         <span><strong>Tickets</strong> - 6 €/mes</span>
                     </label>
                 </div>
+                </div>
+            </section>
+
+            <!-- Bundles Sugeridos -->
+            <section class="card">
+                <div class="accordion-header" id="bundles-header">
+                    <h2>3. Bundles Sugeridos (Opcional)</h2>
+                    <span class="accordion-icon" id="bundles-icon">▼</span>
+                </div>
+                <div class="accordion-content collapsed" id="bundles-content">
+                    <p class="bundle-note">Selecciona un bundle para configurar automáticamente base y módulos. Puedes personalizar después.</p>
+                    
+                    <div class="bundle-category">
+                        <h3>Autónomos / Micro</h3>
+                        <div class="bundle-options">
+                            <label class="bundle-option">
+                                <input type="radio" name="bundle" value="cumple-factura">
+                                <div class="bundle-content">
+                                    <strong>Cumple & Factura</strong>
+                                    <small>Micro + Facturación S</small>
+                                    <span class="bundle-price">15 €/mes</span>
+                                </div>
+                            </label>
+                            <label class="bundle-option recommended">
+                                <input type="radio" name="bundle" value="personas-facturae-nominas">
+                                <div class="bundle-content">
+                                    <strong>Personas + Facturae + Nóminas</strong>
+                                    <span class="recommended-badge">RECOMENDADO</span>
+                                    <small>Micro + RRHH + Facturación S + Nóminas</small>
+                                    <span class="bundle-price">24 € + nóminas</span>
+                                </div>
+                            </label>
+                            <label class="bundle-option">
+                                <input type="radio" name="bundle" value="vende-cobra">
+                                <div class="bundle-content">
+                                    <strong>Vende y Cobra (Caja)</strong>
+                                    <small>Micro + Facturación M + Tesorería</small>
+                                    <span class="bundle-price">27 €/mes</span>
+                                </div>
+                            </label>
+                            <label class="bundle-option">
+                                <input type="radio" name="bundle" value="autonomo-pro-360">
+                                <div class="bundle-content">
+                                    <strong>Autónomo Pro 360</strong>
+                                    <small>Micro + Facturación M + Tesorería + Contabilidad</small>
+                                    <span class="bundle-price">36 €/mes</span>
+                                </div>
+                            </label>
+                            <label class="bundle-option">
+                                <input type="radio" name="bundle" value="servicios-tickets">
+                                <div class="bundle-content">
+                                    <strong>Servicios con tickets</strong>
+                                    <small>Micro + Facturación S + Tickets + Documentos</small>
+                                    <span class="bundle-price">25 €/mes</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bundle-category">
+                        <h3>Pequeñas empresas (1-10)</h3>
+                        <div class="bundle-options">
+                            <label class="bundle-option recommended">
+                                <input type="radio" name="bundle" value="personas-facturae-nominas-pyme">
+                                <div class="bundle-content">
+                                    <strong>Personas + Facturae + Nóminas</strong>
+                                    <span class="recommended-badge">RECOMENDADO</span>
+                                    <small>Pyme + RRHH + Facturación L + Nóminas</small>
+                                    <span class="bundle-price">37 € + nóminas</span>
+                                </div>
+                            </label>
+                            <label class="bundle-option">
+                                <input type="radio" name="bundle" value="ventas-cobros">
+                                <div class="bundle-content">
+                                    <strong>Ventas & Cobros (Tesorería)</strong>
+                                    <small>Pyme + Facturación L + Tesorería</small>
+                                    <span class="bundle-price">37 €/mes</span>
+                                </div>
+                            </label>
+                            <label class="bundle-option">
+                                <input type="radio" name="bundle" value="finanzas-360">
+                                <div class="bundle-content">
+                                    <strong>Finanzas 360</strong>
+                                    <small>Pyme + Facturación L + Tesorería + Contabilidad</small>
+                                    <span class="bundle-price">46 €/mes</span>
+                                </div>
+                            </label>
+                            <label class="bundle-option">
+                                <input type="radio" name="bundle" value="operativa-completa">
+                                <div class="bundle-content">
+                                    <strong>Operativa Completa</strong>
+                                    <small>Pyme + Todos los módulos</small>
+                                    <span class="bundle-price">71 € + nóminas</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bundle-category">
+                        <h3>Empresas medianas (10-50)</h3>
+                        <div class="bundle-options">
+                            <label class="bundle-option recommended">
+                                <input type="radio" name="bundle" value="erp-facturae-personas">
+                                <div class="bundle-content">
+                                    <strong>ERP + Facturae + Personas</strong>
+                                    <span class="recommended-badge">RECOMENDADO</span>
+                                    <small>Empresa + Facturación XL + Tesorería + Contabilidad + RRHH + Nóminas</small>
+                                    <span class="bundle-price">71 € + nóminas</span>
+                                </div>
+                            </label>
+                            <label class="bundle-option">
+                                <input type="radio" name="bundle" value="erp-esencial">
+                                <div class="bundle-content">
+                                    <strong>ERP Esencial</strong>
+                                    <small>Empresa + Facturación XL + Tesorería + Contabilidad</small>
+                                    <span class="bundle-price">62 €/mes</span>
+                                </div>
+                            </label>
+                            <label class="bundle-option">
+                                <input type="radio" name="bundle" value="erp-pro">
+                                <div class="bundle-content">
+                                    <strong>ERP Pro (Integraciones & API)</strong>
+                                    <small>Empresa + Facturación Enterprise + Todos los módulos</small>
+                                    <span class="bundle-price">95 € + nóminas</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bundle-actions">
+                        <button type="button" id="apply-bundle" class="btn-bundle">Aplicar Bundle</button>
+                        <button type="button" id="clear-bundle" class="btn-bundle-secondary">Limpiar Selección</button>
+                    </div>
+                </div>
             </section>
 
             <!-- Extras -->
             <section class="card">
-                <h2>3. Extras</h2>
+                <h2>4. Extras</h2>
                 <div class="extra-input">
                     <label>Usuarios adicionales (si superas los incluidos en tu base):</label>
                     <input type="number" id="usuarios-extra" min="0" value="0" placeholder="0">

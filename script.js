@@ -33,19 +33,67 @@ const PRICES = {
 // Estado de la calculadora
 let selectedBase = null;
 let selectedModules = new Set();
+let billingPeriod = 'monthly'; // 'monthly' o 'annual'
 let calculation = {
     base: 0,
     modules: {},
     extras: {},
-    total: 0
+    total: 0,
+    monthlyTotal: 0,
+    annualTotal: 0,
+    savings: 0
 };
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     initializeEventListeners();
+    initializeAccordion();
 });
 
+function initializeAccordion() {
+    // Acordeón de módulos
+    const modulesHeader = document.getElementById('modules-header');
+    const modulesContent = document.getElementById('modules-content');
+    
+    modulesContent.classList.add('collapsed');
+    modulesHeader.classList.add('collapsed');
+    
+    modulesHeader.addEventListener('click', () => {
+        const isCollapsed = modulesContent.classList.contains('collapsed');
+        if (isCollapsed) {
+            modulesContent.classList.remove('collapsed');
+            modulesHeader.classList.remove('collapsed');
+        } else {
+            modulesContent.classList.add('collapsed');
+            modulesHeader.classList.add('collapsed');
+        }
+    });
+
+    // Acordeón de bundles
+    const bundlesHeader = document.getElementById('bundles-header');
+    const bundlesContent = document.getElementById('bundles-content');
+    
+    bundlesContent.classList.add('collapsed');
+    bundlesHeader.classList.add('collapsed');
+    
+    bundlesHeader.addEventListener('click', () => {
+        const isCollapsed = bundlesContent.classList.contains('collapsed');
+        if (isCollapsed) {
+            bundlesContent.classList.remove('collapsed');
+            bundlesHeader.classList.remove('collapsed');
+        } else {
+            bundlesContent.classList.add('collapsed');
+            bundlesHeader.classList.add('collapsed');
+        }
+    });
+}
+
 function initializeEventListeners() {
+    // Período de facturación
+    document.querySelectorAll('input[name="period"]').forEach(radio => {
+        radio.addEventListener('change', handlePeriodChange);
+    });
+
     // Bases
     document.querySelectorAll('input[name="base"]').forEach(radio => {
         radio.addEventListener('change', handleBaseChange);
@@ -74,6 +122,17 @@ function initializeEventListeners() {
 
     // Botón generar presupuesto
     document.getElementById('generar-presupuesto').addEventListener('click', generatePresupuesto);
+
+    // Bundles
+    document.getElementById('apply-bundle').addEventListener('click', applyBundle);
+    document.getElementById('clear-bundle').addEventListener('click', clearBundle);
+}
+
+function handlePeriodChange(e) {
+    if (e.target.checked) {
+        billingPeriod = e.target.value;
+        calculateTotal();
+    }
 }
 
 function handleBaseChange(e) {
@@ -219,12 +278,193 @@ function calculateTotal() {
         }
     }
 
-    // Calcular total
-    calculation.total = calculation.base;
-    Object.values(calculation.modules).forEach(m => calculation.total += m.price);
-    Object.values(calculation.extras).forEach(e => calculation.total += e.price);
+    // Calcular total mensual
+    calculation.monthlyTotal = calculation.base;
+    Object.values(calculation.modules).forEach(m => calculation.monthlyTotal += m.price);
+    Object.values(calculation.extras).forEach(e => calculation.monthlyTotal += e.price);
+
+    // Calcular según período
+    if (billingPeriod === 'annual') {
+        // Plan anual: pagas 10 meses en lugar de 12 (2 meses gratis = 17% descuento)
+        calculation.total = calculation.monthlyTotal * 10;
+        calculation.annualTotal = calculation.total;
+        calculation.savings = (calculation.monthlyTotal * 12) - calculation.total;
+    } else {
+        // Plan mensual
+        calculation.total = calculation.monthlyTotal;
+        calculation.annualTotal = calculation.monthlyTotal * 12;
+        calculation.savings = 0;
+    }
 
     updateSummary();
+}
+
+// Configuración de bundles
+const BUNDLES = {
+    'cumple-factura': {
+        base: 'micro',
+        modules: { facturacion: { package: 's' } }
+    },
+    'personas-facturae-nominas': {
+        base: 'micro',
+        modules: { rrhh: true, facturacion: { package: 's' }, nominas: true }
+    },
+    'vende-cobra': {
+        base: 'micro',
+        modules: { facturacion: { package: 'm' }, tesoreria: true }
+    },
+    'autonomo-pro-360': {
+        base: 'micro',
+        modules: { facturacion: { package: 'm' }, tesoreria: true, contabilidad: true }
+    },
+    'servicios-tickets': {
+        base: 'micro',
+        modules: { facturacion: { package: 's' }, tickets: true, documentos: true }
+    },
+    'personas-facturae-nominas-pyme': {
+        base: 'pyme',
+        modules: { rrhh: true, facturacion: { package: 'l' }, nominas: true }
+    },
+    'ventas-cobros': {
+        base: 'pyme',
+        modules: { facturacion: { package: 'l' }, tesoreria: true }
+    },
+    'finanzas-360': {
+        base: 'pyme',
+        modules: { facturacion: { package: 'l' }, tesoreria: true, contabilidad: true }
+    },
+    'operativa-completa': {
+        base: 'pyme',
+        modules: { 
+            facturacion: { package: 'l' }, 
+            tesoreria: true, 
+            rrhh: true, 
+            contabilidad: true, 
+            tickets: true, 
+            documentos: true, 
+            dashboards: true 
+        }
+    },
+    'erp-facturae-personas': {
+        base: 'empresa',
+        modules: { 
+            facturacion: { package: 'xl' }, 
+            tesoreria: true, 
+            contabilidad: true, 
+            rrhh: true, 
+            nominas: true 
+        }
+    },
+    'erp-esencial': {
+        base: 'empresa',
+        modules: { 
+            facturacion: { package: 'xl' }, 
+            tesoreria: true, 
+            contabilidad: true 
+        }
+    },
+    'erp-pro': {
+        base: 'empresa',
+        modules: { 
+            facturacion: { package: 'enterprise' }, 
+            tesoreria: true, 
+            contabilidad: true, 
+            rrhh: true, 
+            documentos: true, 
+            dashboards: true, 
+            tickets: true 
+        }
+    }
+};
+
+function applyBundle() {
+    const selectedBundle = document.querySelector('input[name="bundle"]:checked');
+    if (!selectedBundle) {
+        alert('Por favor, selecciona un bundle primero.');
+        return;
+    }
+
+    const bundle = BUNDLES[selectedBundle.value];
+    if (!bundle) return;
+
+    // Limpiar selección anterior
+    clearBundle(false);
+
+    // Aplicar base
+    const baseRadio = document.querySelector(`input[name="base"][value="${bundle.base}"]`);
+    if (baseRadio) {
+        baseRadio.checked = true;
+        selectedBase = bundle.base;
+    }
+
+    // Aplicar módulos
+    Object.keys(bundle.modules).forEach(moduleId => {
+        const moduleConfig = bundle.modules[moduleId];
+        const moduleCheckbox = document.getElementById(moduleId);
+        
+        if (moduleCheckbox) {
+            moduleCheckbox.checked = true;
+            
+            // Configurar opciones específicas
+            if (moduleId === 'facturacion' && moduleConfig.package) {
+                const packageSelect = document.getElementById('facturacion-package');
+                packageSelect.value = moduleConfig.package;
+                const options = document.getElementById('facturacion-options');
+                options.style.display = 'block';
+                selectedModules.add('facturacion');
+            } else if (moduleId === 'nominas') {
+                const options = document.getElementById('nominas-options');
+                options.style.display = 'block';
+                selectedModules.add('nominas');
+            } else {
+                selectedModules.add(moduleId);
+            }
+        }
+    });
+
+    // Recalcular
+    calculateTotal();
+    
+    // Expandir sección de módulos para ver la configuración
+    const modulesContent = document.getElementById('modules-content');
+    const modulesHeader = document.getElementById('modules-header');
+    modulesContent.classList.remove('collapsed');
+    modulesHeader.classList.remove('collapsed');
+}
+
+function clearBundle(showAlert = true) {
+    // Desmarcar todos los bundles
+    document.querySelectorAll('input[name="bundle"]').forEach(radio => {
+        radio.checked = false;
+    });
+
+    // Limpiar base
+    document.querySelectorAll('input[name="base"]').forEach(radio => {
+        radio.checked = false;
+    });
+    selectedBase = null;
+
+    // Limpiar módulos
+    document.querySelectorAll('input[data-module]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectedModules.clear();
+
+    // Ocultar opciones
+    document.getElementById('facturacion-options').style.display = 'none';
+    document.getElementById('nominas-options').style.display = 'none';
+
+    // Limpiar inputs
+    document.getElementById('facturas-extra').value = 0;
+    document.getElementById('num-nominas').value = 0;
+    document.getElementById('usuarios-extra').value = 0;
+    document.getElementById('pack-1000').checked = false;
+
+    if (showAlert) {
+        alert('Bundle limpiado. Puedes configurar manualmente.');
+    }
+
+    calculateTotal();
 }
 
 function updateSummary() {
@@ -243,34 +483,50 @@ function updateSummary() {
 
     let html = '';
 
+    // Mostrar período seleccionado
+    html += `<div class="summary-item period-info">
+        <span class="label">Período: <strong>${billingPeriod === 'annual' ? 'Anual (10 meses)' : 'Mensual'}</strong></span>
+        ${billingPeriod === 'annual' ? `<span class="value savings">Ahorras: ${calculation.savings.toFixed(2)} €</span>` : ''}
+    </div>`;
+
     // Base
     if (calculation.base > 0) {
+        const basePrice = billingPeriod === 'annual' ? (calculation.base * 10) : calculation.base;
         html += `<div class="summary-item">
             <span class="label">Base ${PRICES.bases[selectedBase].name}</span>
-            <span class="value">${calculation.base.toFixed(2)} €</span>
+            <span class="value">${basePrice.toFixed(2)} €</span>
         </div>`;
     }
 
     // Módulos
     Object.values(calculation.modules).forEach(module => {
+        const modulePrice = billingPeriod === 'annual' ? (module.price * 10) : module.price;
         html += `<div class="summary-item">
             <span class="label">${module.name}${module.detail ? ` (${module.detail})` : ''}</span>
-            <span class="value">${module.price.toFixed(2)} €</span>
+            <span class="value">${modulePrice.toFixed(2)} €</span>
         </div>`;
     });
 
     // Extras
     Object.values(calculation.extras).forEach(extra => {
+        const extraPrice = billingPeriod === 'annual' ? (extra.price * 10) : extra.price;
         html += `<div class="summary-item">
             <span class="label">${extra.name}</span>
-            <span class="value">${extra.price.toFixed(2)} €</span>
+            <span class="value">${extraPrice.toFixed(2)} €</span>
         </div>`;
     });
 
     summaryContent.innerHTML = html || '<p class="empty-message">Añade módulos para ver el desglose</p>';
 
-    totalMensual.textContent = `${calculation.total.toFixed(2)} €`;
-    totalAnual.textContent = `${(calculation.total * 12).toFixed(2)} €`;
+    // Actualizar totales según período
+    if (billingPeriod === 'annual') {
+        totalMensual.textContent = `${(calculation.total / 12).toFixed(2)} €/mes`;
+        totalAnual.textContent = `${calculation.total.toFixed(2)} €/año`;
+    } else {
+        totalMensual.textContent = `${calculation.total.toFixed(2)} €/mes`;
+        totalAnual.textContent = `${calculation.annualTotal.toFixed(2)} €/año`;
+    }
+    
     btnPresupuesto.disabled = false;
 }
 
@@ -378,36 +634,40 @@ function generatePresupuesto() {
     <div class="info">
         <p><strong>Fecha:</strong> ${fecha}</p>
         <p><strong>Precios:</strong> Sin IVA</p>
+        <p><strong>Período de facturación:</strong> ${billingPeriod === 'annual' ? 'Anual (pago por 10 meses)' : 'Mensual'}</p>
+        ${billingPeriod === 'annual' ? `<p style="color: #4ade80; font-weight: bold;"><strong>Ahorro:</strong> ${calculation.savings.toFixed(2)} € (2 meses gratis)</p>` : ''}
     </div>
 
     <table>
         <thead>
             <tr>
                 <th>Concepto</th>
-                <th style="text-align: right;">Precio Mensual</th>
+                <th style="text-align: right;">${billingPeriod === 'annual' ? 'Precio Anual (10 meses)' : 'Precio Mensual'}</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td><strong>Base ${PRICES.bases[selectedBase].name}</strong> (${PRICES.bases[selectedBase].users} usuario${PRICES.bases[selectedBase].users > 1 ? 's' : ''} incluido${PRICES.bases[selectedBase].users > 1 ? 's' : ''})</td>
-                <td style="text-align: right;">${calculation.base.toFixed(2)} €</td>
+                <td style="text-align: right;">${(billingPeriod === 'annual' ? calculation.base * 10 : calculation.base).toFixed(2)} €</td>
             </tr>`;
 
     // Módulos
     Object.values(calculation.modules).forEach(module => {
+        const modulePrice = billingPeriod === 'annual' ? (module.price * 10) : module.price;
         presupuestoHTML += `
             <tr>
                 <td>${module.name}${module.detail ? ` - ${module.detail}` : ''}</td>
-                <td style="text-align: right;">${module.price.toFixed(2)} €</td>
+                <td style="text-align: right;">${modulePrice.toFixed(2)} €</td>
             </tr>`;
     });
 
     // Extras
     Object.values(calculation.extras).forEach(extra => {
+        const extraPrice = billingPeriod === 'annual' ? (extra.price * 10) : extra.price;
         presupuestoHTML += `
             <tr>
                 <td>${extra.name}</td>
-                <td style="text-align: right;">${extra.price.toFixed(2)} €</td>
+                <td style="text-align: right;">${extraPrice.toFixed(2)} €</td>
             </tr>`;
     });
 
@@ -417,16 +677,27 @@ function generatePresupuesto() {
 
     <div class="total-section">
         <div class="total-line">
-            <span>Total mensual:</span>
+            <span>Total ${billingPeriod === 'annual' ? 'anual (10 meses)' : 'mensual'}:</span>
             <span>${calculation.total.toFixed(2)} €</span>
         </div>
+        ${billingPeriod === 'annual' ? `
+        <div class="total-line" style="color: #4ade80; font-weight: bold;">
+            <span>Ahorro (2 meses gratis):</span>
+            <span>${calculation.savings.toFixed(2)} €</span>
+        </div>
+        <div class="total-line">
+            <span>Equivalente mensual:</span>
+            <span>${(calculation.total / 12).toFixed(2)} €/mes</span>
+        </div>
+        ` : `
         <div class="total-line">
             <span>Total anual (12 meses):</span>
-            <span>${(calculation.total * 12).toFixed(2)} €</span>
+            <span>${calculation.annualTotal.toFixed(2)} €</span>
         </div>
+        `}
         <div class="total-line grand">
-            <span>TOTAL:</span>
-            <span>${calculation.total.toFixed(2)} €/mes</span>
+            <span>TOTAL A PAGAR:</span>
+            <span>${calculation.total.toFixed(2)} €${billingPeriod === 'annual' ? '/año' : '/mes'}</span>
         </div>
     </div>
 
