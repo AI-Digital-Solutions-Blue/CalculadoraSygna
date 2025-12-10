@@ -8,11 +8,9 @@ const PRICES = {
     modules: {
         facturacion: { name: 'Facturación Digital' },
         rrhh: { price: 9, name: 'RRHH' },
-        nominas: { name: 'Nóminas', requires: 'rrhh' },
         tesoreria: { price: 9, name: 'Tesorería' },
         contabilidad: { price: 9, name: 'Contabilidad', requires: 'facturacion' },
         documentos: { price: 4, name: 'Documentos y Firma Digital' },
-        dashboards: { price: 6, name: 'Dashboards e Integraciones' },
         tickets: { price: 6, name: 'Tickets' }
     },
     facturacionPackages: {
@@ -25,8 +23,7 @@ const PRICES = {
     extras: {
         usuarioAdicional: 3,
         facturaAdicional: 0.10,
-        pack1000Facturas: 80 / 12, // 6.67 €/mes
-        nomina: 5
+        pack1000Facturas: 80 / 12 // 6.67 €/mes
     }
 };
 
@@ -102,20 +99,15 @@ function initializeEventListeners() {
     // Módulos
     document.getElementById('facturacion').addEventListener('change', handleFacturacionChange);
     document.getElementById('rrhh').addEventListener('change', handleModuleChange);
-    document.getElementById('nominas').addEventListener('change', handleNominasChange);
     document.getElementById('tesoreria').addEventListener('change', handleModuleChange);
     document.getElementById('contabilidad').addEventListener('change', handleModuleChange);
     document.getElementById('documentos').addEventListener('change', handleModuleChange);
-    document.getElementById('dashboards').addEventListener('change', handleModuleChange);
     document.getElementById('tickets').addEventListener('change', handleModuleChange);
 
     // Opciones de facturación
     document.getElementById('facturacion-package').addEventListener('change', calculateTotal);
     document.getElementById('facturas-extra').addEventListener('input', calculateTotal);
     document.getElementById('pack-1000').addEventListener('change', calculateTotal);
-
-    // Nóminas
-    document.getElementById('num-nominas').addEventListener('input', calculateTotal);
 
     // Extras
     document.getElementById('usuarios-extra').addEventListener('input', calculateTotal);
@@ -159,23 +151,6 @@ function handleFacturacionChange(e) {
     calculateTotal();
 }
 
-function handleNominasChange(e) {
-    const options = document.getElementById('nominas-options');
-    if (e.target.checked) {
-        if (!document.getElementById('rrhh').checked) {
-            alert('Las Nóminas requieren el módulo de RRHH activo.');
-            e.target.checked = false;
-            return;
-        }
-        options.style.display = 'block';
-        selectedModules.add('nominas');
-    } else {
-        options.style.display = 'none';
-        selectedModules.delete('nominas');
-    }
-    calculateTotal();
-}
-
 function handleModuleChange(e) {
     const moduleId = e.target.id;
     const module = PRICES.modules[moduleId];
@@ -194,10 +169,6 @@ function handleModuleChange(e) {
     } else {
         selectedModules.delete(moduleId);
         // Desactivar módulos que dependen de este
-        if (moduleId === 'rrhh' && document.getElementById('nominas').checked) {
-            document.getElementById('nominas').checked = false;
-            handleNominasChange({ target: document.getElementById('nominas') });
-        }
         if (moduleId === 'facturacion' && document.getElementById('contabilidad').checked) {
             document.getElementById('contabilidad').checked = false;
             handleModuleChange({ target: document.getElementById('contabilidad') });
@@ -231,14 +202,6 @@ function calculateTotal() {
             calculation.modules[moduleId] = {
                 name: `${module.name} - Paquete ${selectedPackage.toUpperCase()}`,
                 price: packageData.price
-            };
-        } else if (moduleId === 'nominas') {
-            const numNominas = parseInt(document.getElementById('num-nominas').value) || 0;
-            const totalNominas = numNominas * PRICES.extras.nomina;
-            calculation.modules[moduleId] = {
-                name: module.name,
-                price: totalNominas,
-                detail: `${numNominas} nóminas × ${PRICES.extras.nomina} €`
             };
         } else if (module.price) {
             calculation.modules[moduleId] = {
@@ -307,7 +270,7 @@ const BUNDLES = {
     },
     'personas-facturae-nominas': {
         base: 'micro',
-        modules: { rrhh: true, facturacion: { package: 's' }, nominas: true }
+        modules: { rrhh: true, facturacion: { package: 's' } }
     },
     'vende-cobra': {
         base: 'micro',
@@ -323,7 +286,7 @@ const BUNDLES = {
     },
     'personas-facturae-nominas-pyme': {
         base: 'pyme',
-        modules: { rrhh: true, facturacion: { package: 'l' }, nominas: true }
+        modules: { rrhh: true, facturacion: { package: 'l' } }
     },
     'ventas-cobros': {
         base: 'pyme',
@@ -341,8 +304,7 @@ const BUNDLES = {
             rrhh: true, 
             contabilidad: true, 
             tickets: true, 
-            documentos: true, 
-            dashboards: true 
+            documentos: true
         }
     },
     'erp-facturae-personas': {
@@ -351,8 +313,7 @@ const BUNDLES = {
             facturacion: { package: 'xl' }, 
             tesoreria: true, 
             contabilidad: true, 
-            rrhh: true, 
-            nominas: true 
+            rrhh: true
         }
     },
     'erp-esencial': {
@@ -371,7 +332,6 @@ const BUNDLES = {
             contabilidad: true, 
             rrhh: true, 
             documentos: true, 
-            dashboards: true, 
             tickets: true 
         }
     }
@@ -412,10 +372,6 @@ function applyBundle() {
                 const options = document.getElementById('facturacion-options');
                 options.style.display = 'block';
                 selectedModules.add('facturacion');
-            } else if (moduleId === 'nominas') {
-                const options = document.getElementById('nominas-options');
-                options.style.display = 'block';
-                selectedModules.add('nominas');
             } else {
                 selectedModules.add(moduleId);
             }
@@ -452,11 +408,9 @@ function clearBundle(showAlert = true) {
 
     // Ocultar opciones
     document.getElementById('facturacion-options').style.display = 'none';
-    document.getElementById('nominas-options').style.display = 'none';
 
     // Limpiar inputs
     document.getElementById('facturas-extra').value = 0;
-    document.getElementById('num-nominas').value = 0;
     document.getElementById('usuarios-extra').value = 0;
     document.getElementById('pack-1000').checked = false;
 

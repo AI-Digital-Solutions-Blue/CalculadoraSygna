@@ -55,9 +55,43 @@ header h1 {
     margin-top: 10px;
 }
 
+.main-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 25px;
+    align-items: start;
+}
+
 .calculator-grid {
     display: grid;
     gap: 20px;
+}
+
+.summary-sidebar {
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.summary-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.summary-sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.summary-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+.summary-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .card {
@@ -225,6 +259,20 @@ header h1 {
     transform: translateX(5px);
 }
 
+/* Extras dentro de módulos */
+.extras-section {
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 2px solid #e0e0e0;
+}
+
+.extras-section h3 {
+    color: #667eea;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
 .module-toggle {
     display: flex;
     align-items: center;
@@ -309,6 +357,13 @@ header h1 {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
     color: white;
     box-shadow: 0 15px 50px rgba(102, 126, 234, 0.4);
+    position: sticky;
+    top: 20px;
+}
+
+.summary-sidebar .summary-card {
+    position: relative;
+    top: 0;
 }
 
 .summary-card h2 {
@@ -318,10 +373,26 @@ header h1 {
 
 #summary-content {
     min-height: 100px;
+    max-height: 400px;
     margin-bottom: 20px;
     padding: 15px;
     background: rgba(255,255,255,0.1);
     border-radius: 8px;
+    overflow-y: auto;
+}
+
+#summary-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+#summary-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+#summary-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
 }
 
 .empty-message {
@@ -659,6 +730,23 @@ header h1 {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-sidebar {
+        position: relative;
+        top: 0;
+        max-height: none;
+    }
+    
+    .summary-card {
+        position: relative;
+        top: 0;
+    }
+}
+
 @media (max-width: 768px) {
     header h1 {
         font-size: 2rem;
