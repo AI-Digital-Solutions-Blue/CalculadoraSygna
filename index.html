@@ -10,8 +10,6 @@
     <div class="container">
         <header>
             <h1>Calculadora Sygna</h1>
-            <p class="subtitle">Modelo modular: elige tu base, añade módulos y paga solo por lo que usas</p>
-            <p class="note">Precios sin IVA</p>
         </header>
 
         <div class="main-layout">
@@ -309,7 +307,24 @@
                             <strong id="total-anual">0,00 €</strong>
                         </div>
                     </div>
-                    <button id="generar-presupuesto" class="btn-primary" disabled>Generar Presupuesto PDF</button>
+                    
+                    <div class="iva-section">
+                        <label class="iva-toggle-label">
+                            <input type="checkbox" id="incluir-iva">
+                            <span>Incluir IVA (21%)</span>
+                        </label>
+                    </div>
+
+                    <div class="email-section" style="display: none;">
+                        <label for="email-destino">Enviar presupuesto a:</label>
+                        <input type="email" id="email-destino" placeholder="correo@ejemplo.com" class="email-input">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="generar-presupuesto" class="btn-primary" disabled>Generar Presupuesto PDF</button>
+                        <button id="descargar-presupuesto" class="btn-secondary" disabled>Descargar Presupuesto</button>
+                        <button id="enviar-email" class="btn-secondary" disabled style="display: none;">Enviar por Correo</button>
+                    </div>
                 </section>
             </aside>
         </div>

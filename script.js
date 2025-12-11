@@ -1,3 +1,7 @@
+// Configuración del Backend API
+// Cambia esta URL si tu backend está en otro puerto o dominio
+const API_URL = window.location.origin; // Usa el mismo origen, o cambia a 'http://localhost:3000' si el backend está en otro puerto
+
 // Datos de precios
 const PRICES = {
     bases: {
@@ -31,6 +35,8 @@ const PRICES = {
 let selectedBase = null;
 let selectedModules = new Set();
 let billingPeriod = 'monthly'; // 'monthly' o 'annual'
+let incluirIVA = false;
+const IVA_PORCENTAJE = 21; // 21% IVA
 let calculation = {
     base: 0,
     modules: {},
@@ -38,7 +44,9 @@ let calculation = {
     total: 0,
     monthlyTotal: 0,
     annualTotal: 0,
-    savings: 0
+    savings: 0,
+    iva: 0,
+    totalConIVA: 0
 };
 
 // Inicialización
@@ -115,8 +123,34 @@ function initializeEventListeners() {
     // Botón generar presupuesto
     document.getElementById('generar-presupuesto').addEventListener('click', generatePresupuesto);
 
-    // Bundles
-    document.getElementById('apply-bundle').addEventListener('click', applyBundle);
+    // Botón descargar presupuesto
+    document.getElementById('descargar-presupuesto').addEventListener('click', downloadPresupuesto);
+
+    // Botón enviar por correo
+    document.getElementById('enviar-email').addEventListener('click', sendEmail);
+
+    // Validar email en tiempo real
+    document.getElementById('email-destino').addEventListener('input', validateEmail);
+
+    // IVA toggle
+    document.getElementById('incluir-iva').addEventListener('change', (e) => {
+        incluirIVA = e.target.checked;
+        calculateTotal();
+    });
+
+    // Bundles - cuando se selecciona un bundle, aplicar y generar presupuesto automáticamente
+    document.querySelectorAll('input[name="bundle"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                applyBundle(true); // Aplicar bundle y generar presupuesto
+            }
+        });
+    });
+
+    // Botones de bundles (mantener para compatibilidad)
+    document.getElementById('apply-bundle').addEventListener('click', () => {
+        applyBundle(false); // Solo aplicar, no generar presupuesto
+    });
     document.getElementById('clear-bundle').addEventListener('click', clearBundle);
 }
 
@@ -259,6 +293,15 @@ function calculateTotal() {
         calculation.savings = 0;
     }
 
+    // Calcular IVA si está activado
+    if (incluirIVA) {
+        calculation.iva = (calculation.total * IVA_PORCENTAJE) / 100;
+        calculation.totalConIVA = calculation.total + calculation.iva;
+    } else {
+        calculation.iva = 0;
+        calculation.totalConIVA = calculation.total;
+    }
+
     updateSummary();
 }
 
@@ -337,7 +380,7 @@ const BUNDLES = {
     }
 };
 
-function applyBundle() {
+function applyBundle(generatePresupuesto = false) {
     const selectedBundle = document.querySelector('input[name="bundle"]:checked');
     if (!selectedBundle) {
         alert('Por favor, selecciona un bundle primero.');
@@ -386,6 +429,26 @@ function applyBundle() {
     const modulesHeader = document.getElementById('modules-header');
     modulesContent.classList.remove('collapsed');
     modulesHeader.classList.remove('collapsed');
+
+    // Si se solicita, generar presupuesto automáticamente
+    if (generatePresupuesto) {
+        // Esperar un momento para que se actualice el cálculo
+        setTimeout(() => {
+            if (selectedBase && calculation.total > 0) {
+                generatePresupuesto();
+            }
+        }, 300);
+    }
+}
+
+function applyBundleAndGenerate(bundleId) {
+    // Seleccionar el bundle primero
+    const bundleRadio = document.querySelector(`input[name="bundle"][value="${bundleId}"]`);
+    if (bundleRadio) {
+        bundleRadio.checked = true;
+        // Aplicar bundle y generar presupuesto
+        applyBundle(true);
+    }
 }
 
 function clearBundle(showAlert = true) {
@@ -426,12 +489,14 @@ function updateSummary() {
     const totalMensual = document.getElementById('total-mensual');
     const totalAnual = document.getElementById('total-anual');
     const btnPresupuesto = document.getElementById('generar-presupuesto');
+    const btnDescargar = document.getElementById('descargar-presupuesto');
 
     if (!selectedBase) {
         summaryContent.innerHTML = '<p class="empty-message">Selecciona una base para comenzar</p>';
         totalMensual.textContent = '0,00 €';
         totalAnual.textContent = '0,00 €';
         btnPresupuesto.disabled = true;
+        btnDescargar.disabled = true;
         return;
     }
 
@@ -470,27 +535,37 @@ function updateSummary() {
         </div>`;
     });
 
+    // Mostrar IVA en el resumen si está activado
+    if (incluirIVA && calculation.iva > 0) {
+        html += `<div class="summary-item" style="border-top: 2px solid rgba(255,255,255,0.3); margin-top: 10px; padding-top: 10px;">
+            <span class="label">Base imponible:</span>
+            <span class="value">${calculation.total.toFixed(2)} €</span>
+        </div>`;
+        html += `<div class="summary-item">
+            <span class="label">IVA (${IVA_PORCENTAJE}%):</span>
+            <span class="value">${calculation.iva.toFixed(2)} €</span>
+        </div>`;
+    }
+
     summaryContent.innerHTML = html || '<p class="empty-message">Añade módulos para ver el desglose</p>';
 
     // Actualizar totales según período
+    let totalMostrar = incluirIVA ? calculation.totalConIVA : calculation.total;
+    let totalAnualMostrar = incluirIVA ? (calculation.annualTotal + (calculation.annualTotal * IVA_PORCENTAJE / 100)) : calculation.annualTotal;
+    
     if (billingPeriod === 'annual') {
-        totalMensual.textContent = `${(calculation.total / 12).toFixed(2)} €/mes`;
-        totalAnual.textContent = `${calculation.total.toFixed(2)} €/año`;
+        totalMensual.textContent = `${(totalMostrar / 12).toFixed(2)} €/mes`;
+        totalAnual.textContent = `${totalMostrar.toFixed(2)} €/año`;
     } else {
-        totalMensual.textContent = `${calculation.total.toFixed(2)} €/mes`;
-        totalAnual.textContent = `${calculation.annualTotal.toFixed(2)} €/año`;
+        totalMensual.textContent = `${totalMostrar.toFixed(2)} €/mes`;
+        totalAnual.textContent = `${totalAnualMostrar.toFixed(2)} €/año`;
     }
     
     btnPresupuesto.disabled = false;
+    btnDescargar.disabled = false;
 }
 
-function generatePresupuesto() {
-    if (!selectedBase || calculation.total === 0) {
-        alert('Por favor, completa la configuración antes de generar el presupuesto.');
-        return;
-    }
-
-    // Crear contenido del presupuesto
+function generatePresupuestoHTML() {
     const fecha = new Date().toLocaleDateString('es-ES', { 
         year: 'numeric', 
         month: 'long', 
@@ -631,9 +706,15 @@ function generatePresupuesto() {
 
     <div class="total-section">
         <div class="total-line">
-            <span>Total ${billingPeriod === 'annual' ? 'anual (10 meses)' : 'mensual'}:</span>
+            <span>Total ${billingPeriod === 'annual' ? 'anual (10 meses)' : 'mensual'} ${incluirIVA ? '(sin IVA)' : ''}:</span>
             <span>${calculation.total.toFixed(2)} €</span>
         </div>
+        ${incluirIVA ? `
+        <div class="total-line">
+            <span>IVA (${IVA_PORCENTAJE}%):</span>
+            <span>${calculation.iva.toFixed(2)} €</span>
+        </div>
+        ` : ''}
         ${billingPeriod === 'annual' ? `
         <div class="total-line" style="color: #4ade80; font-weight: bold;">
             <span>Ahorro (2 meses gratis):</span>
@@ -641,17 +722,17 @@ function generatePresupuesto() {
         </div>
         <div class="total-line">
             <span>Equivalente mensual:</span>
-            <span>${(calculation.total / 12).toFixed(2)} €/mes</span>
+            <span>${((incluirIVA ? calculation.totalConIVA : calculation.total) / 12).toFixed(2)} €/mes</span>
         </div>
         ` : `
         <div class="total-line">
             <span>Total anual (12 meses):</span>
-            <span>${calculation.annualTotal.toFixed(2)} €</span>
+            <span>${(incluirIVA ? (calculation.annualTotal + (calculation.annualTotal * IVA_PORCENTAJE / 100)) : calculation.annualTotal).toFixed(2)} €</span>
         </div>
         `}
         <div class="total-line grand">
-            <span>TOTAL A PAGAR:</span>
-            <span>${calculation.total.toFixed(2)} €${billingPeriod === 'annual' ? '/año' : '/mes'}</span>
+            <span>TOTAL A PAGAR${incluirIVA ? ' (con IVA)' : ''}:</span>
+            <span>${(incluirIVA ? calculation.totalConIVA : calculation.total).toFixed(2)} €${billingPeriod === 'annual' ? '/año' : '/mes'}</span>
         </div>
     </div>
 
@@ -672,9 +753,189 @@ function generatePresupuesto() {
 </body>
 </html>`;
 
+    return presupuestoHTML;
+}
+
+function generatePresupuesto() {
+    if (!selectedBase || calculation.total === 0) {
+        alert('Por favor, completa la configuración antes de generar el presupuesto.');
+        return;
+    }
+
+    const presupuestoHTML = generatePresupuestoHTML();
+
     // Abrir ventana con el presupuesto
     const ventana = window.open('', '_blank');
     ventana.document.write(presupuestoHTML);
     ventana.document.close();
+}
+
+function downloadPresupuesto() {
+    if (!selectedBase || calculation.total === 0) {
+        alert('Por favor, completa la configuración antes de descargar el presupuesto.');
+        return;
+    }
+
+    const presupuestoHTML = generatePresupuestoHTML();
+    
+    // Crear blob con el HTML
+    const blob = new Blob([presupuestoHTML], { type: 'text/html' });
+    
+    // Crear URL del blob
+    const url = URL.createObjectURL(blob);
+    
+    // Crear elemento <a> temporal para descargar
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Generar nombre de archivo con fecha
+    const fecha = new Date().toISOString().split('T')[0];
+    const nombreArchivo = `presupuesto-sygna-${fecha}.html`;
+    link.download = nombreArchivo;
+    
+    // Simular clic para iniciar descarga
+    document.body.appendChild(link);
+    link.click();
+    
+    // Limpiar
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function sendEmail() {
+    const emailDestino = document.getElementById('email-destino').value.trim();
+    const emailBtn = document.getElementById('enviar-email');
+    
+    if (!emailDestino) {
+        alert('Por favor, introduce un correo electrónico válido.');
+        return;
+    }
+
+    if (!selectedBase || calculation.total === 0) {
+        alert('Por favor, completa la configuración antes de enviar el presupuesto.');
+        return;
+    }
+
+    // Deshabilitar botón y mostrar estado de carga
+    emailBtn.disabled = true;
+    const originalText = emailBtn.textContent;
+    emailBtn.textContent = 'Enviando...';
+
+    // Crear contenido del presupuesto para el email
+    const fecha = new Date().toLocaleDateString('es-ES', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+
+    // Generar HTML del presupuesto
+    const presupuestoHTML = generatePresupuestoHTML();
+
+    // Crear versión texto plano
+    let emailBody = `PRESUPUESTO SYGNA\n`;
+    emailBody += `Modelo Modular - Planes y Funcionalidades 2025\n\n`;
+    emailBody += `Fecha: ${fecha}\n`;
+    emailBody += `Precios: ${incluirIVA ? 'Con IVA (21%)' : 'Sin IVA'}\n`;
+    emailBody += `Período de facturación: ${billingPeriod === 'annual' ? 'Anual (pago por 10 meses)' : 'Mensual'}\n`;
+    if (billingPeriod === 'annual') {
+        emailBody += `Ahorro: ${calculation.savings.toFixed(2)} € (2 meses gratis)\n`;
+    }
+    emailBody += `\n--- DETALLE DEL PRESUPUESTO ---\n\n`;
+
+    // Base
+    const basePrice = billingPeriod === 'annual' ? (calculation.base * 10) : calculation.base;
+    emailBody += `Base ${PRICES.bases[selectedBase].name} (${PRICES.bases[selectedBase].users} usuario${PRICES.bases[selectedBase].users > 1 ? 's' : ''} incluido${PRICES.bases[selectedBase].users > 1 ? 's' : ''}): ${basePrice.toFixed(2)} €\n`;
+
+    // Módulos
+    Object.values(calculation.modules).forEach(module => {
+        const modulePrice = billingPeriod === 'annual' ? (module.price * 10) : module.price;
+        emailBody += `${module.name}${module.detail ? ` - ${module.detail}` : ''}: ${modulePrice.toFixed(2)} €\n`;
+    });
+
+    // Extras
+    Object.values(calculation.extras).forEach(extra => {
+        const extraPrice = billingPeriod === 'annual' ? (extra.price * 10) : extra.price;
+        emailBody += `${extra.name}: ${extraPrice.toFixed(2)} €\n`;
+    });
+
+    emailBody += `\n--- TOTALES ---\n\n`;
+    emailBody += `Total ${billingPeriod === 'annual' ? 'anual (10 meses)' : 'mensual'} ${incluirIVA ? '(sin IVA)' : ''}: ${calculation.total.toFixed(2)} €\n`;
+    if (incluirIVA) {
+        emailBody += `IVA (${IVA_PORCENTAJE}%): ${calculation.iva.toFixed(2)} €\n`;
+    }
+    if (billingPeriod === 'annual') {
+        emailBody += `Ahorro (2 meses gratis): ${calculation.savings.toFixed(2)} €\n`;
+        emailBody += `Equivalente mensual: ${((incluirIVA ? calculation.totalConIVA : calculation.total) / 12).toFixed(2)} €/mes\n`;
+    } else {
+        emailBody += `Total anual (12 meses): ${(incluirIVA ? (calculation.annualTotal + (calculation.annualTotal * IVA_PORCENTAJE / 100)) : calculation.annualTotal).toFixed(2)} €\n`;
+    }
+    emailBody += `\nTOTAL A PAGAR${incluirIVA ? ' (con IVA)' : ''}: ${(incluirIVA ? calculation.totalConIVA : calculation.total).toFixed(2)} €${billingPeriod === 'annual' ? '/año' : '/mes'}\n`;
+
+    emailBody += `\n--- NOTAS IMPORTANTES ---\n`;
+    emailBody += `- Los precios mostrados son ${incluirIVA ? 'con IVA (21%)' : 'sin IVA'}.\n`;
+    emailBody += `- Los módulos pueden activarse o desactivarse mes a mes.\n`;
+    emailBody += `- La Contabilidad requiere el módulo de Facturación activo.\n`;
+    emailBody += `- Las facturas adicionales y packs aplican solo al módulo de Facturación.\n`;
+
+    // Enviar con backend propio
+    const subject = `Presupuesto Sygna - ${fecha}`;
+    
+    fetch(`${API_URL}/api/send-email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            to_email: emailDestino,
+            subject: subject,
+            html_content: presupuestoHTML,
+            message: emailBody
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            emailBtn.textContent = '✓ Enviado';
+            emailBtn.style.background = 'rgba(74, 222, 128, 0.3)';
+            emailBtn.style.borderColor = '#4ade80';
+            alert('¡Presupuesto enviado correctamente a ' + emailDestino + '!');
+            
+            // Restaurar botón después de 3 segundos
+            setTimeout(() => {
+                emailBtn.textContent = originalText;
+                emailBtn.style.background = '';
+                emailBtn.style.borderColor = '';
+                validateEmail();
+            }, 3000);
+        } else {
+            throw new Error(data.error || 'Error desconocido');
+        }
+    })
+    .catch((error) => {
+        console.error('Error al enviar email:', error);
+        emailBtn.textContent = originalText;
+        emailBtn.disabled = false;
+        
+        // Fallback: usar mailto si el backend falla
+        const subjectEncoded = encodeURIComponent(subject);
+        const bodyEncoded = encodeURIComponent(emailBody);
+        const mailtoLink = `mailto:${emailDestino}?subject=${subjectEncoded}&body=${bodyEncoded}`;
+        
+        if (confirm('Error al conectar con el servidor. ¿Deseas abrir tu cliente de correo como alternativa?')) {
+            window.location.href = mailtoLink;
+        }
+        validateEmail();
+    });
+}
+
+function validateEmail() {
+    const emailInput = document.getElementById('email-destino');
+    const emailBtn = document.getElementById('enviar-email');
+    const email = emailInput.value.trim();
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValid = emailRegex.test(email) && selectedBase && calculation.total > 0;
+    
+    emailBtn.disabled = !isValid;
 }
 
